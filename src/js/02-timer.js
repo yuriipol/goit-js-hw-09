@@ -2,6 +2,7 @@
 import flatpickr from 'flatpickr';
 // Дополнительный импорт стилей
 import 'flatpickr/dist/flatpickr.min.css';
+require('flatpickr/dist/themes/material_green.css');
 
 const options = {
   enableTime: true,
@@ -12,5 +13,5 @@ const options = {
     console.log(selectedDates[0]);
   },
 };
-require('flatpickr/dist/themes/material_green.css');
+
 flatpickr('#datetime-picker', options);
