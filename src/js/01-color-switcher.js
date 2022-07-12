@@ -16,9 +16,11 @@ function onClickChangeColor() {
     bodyChangeColor.style.backgroundColor = getRandomHexColor();
   }, 1000);
   startChangeColorBtn.disabled = true;
+  stopChangeColorBtn.disabled = false;
 }
 
 function onClickStopChangeColor() {
   clearInterval(timerId);
   startChangeColorBtn.disabled = false;
+  stopChangeColorBtn.disabled = true;
 }
