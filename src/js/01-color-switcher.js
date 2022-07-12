@@ -1,0 +1,1 @@
+const startChangeColorBtn = document.querySelector('');
