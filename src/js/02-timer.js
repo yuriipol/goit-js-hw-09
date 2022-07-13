@@ -3,6 +3,7 @@ import flatpickr from 'flatpickr';
 // Дополнительный импорт стилей
 import 'flatpickr/dist/flatpickr.min.css';
 require('flatpickr/dist/themes/material_green.css');
+import Notiflix from 'notiflix';
 
 const btnStart = document.querySelector('[data-start]');
 const daysTime = document.querySelector('[data-days]');
@@ -10,56 +11,88 @@ const hoursTime = document.querySelector('[data-hours]');
 const minutesTime = document.querySelector('[data-minutes]');
 const secondsTime = document.querySelector('[data-seconds]');
 
-const options = {
-  enableTime: true,
-  time_24hr: true,
-  defaultDate: new Date(),
-  minuteIncrement: 1,
-  onClose(selectedDates) {
-    console.log(selectedDates[0]);
-  },
+btnStart.setAttribute('disabled', true); //вешаем атрибут disabled на кнопку start
+
+//Создаем обьект конфигурации елементов DOM
+const DOM_ELEMENTS_CONFIG = {
+  days: daysTime,
+  hours: hoursTime,
+  minutes: minutesTime,
+  seconds: secondsTime,
 };
-
-flatpickr('#datetime-picker', options);
-
+//Создаем обьект с нашим таймером
 const timer = {
+  startDate: null,
+  timeDelta: null,
   intevalId: null,
   isActive: false,
   start() {
-    if (this.isActive) {
+    //создаем условие, чтобы не запускался повторно таймер при нажатии на старт
+    if (this.isActive || !this.startDate) {
+      //если кнопка активна и невыбрана дата
       return;
     }
-    const startTime = Date.now();
     this.isActive = true;
+    const currentTime = Date.now(); //в переменную записываем текущее время
+    this.timeDelta = this.startDate - currentTime; // в this.timeDelta записываем разницу между выбранной датой и текущей
+
     this.intevalId = setInterval(() => {
-      const currentTime = Date.now();
-      const deltaTime = currentTime - startTime;
-      const time = convertMs(deltaTime);
-      //   console.log(`${hours}:${mins}:${secs}`);
-      updateClockTime(time);
+      //создаем интервал
+      if (this.timeDelta <= 0) {
+        // условие на то, что если timeDelta меньше или равна 0,
+        //выводим сообщение и очищаем интервал, присваевем значение null для timeDelta и startDate
+        clearInterval(this.intevalId);
+        Notiflix.Notify.info('Timer has finished!');
+        this.timeDelta = null;
+        this.startDate = null;
+        return;
+      }
+      const time = convertMs(this.timeDelta); //конвертируем нашу timeDelta
+      updateClockTime(time); // обновляем
+      this.timeDelta = this.timeDelta - 1000; //каждую секунду от timeDelta отнимаем 1 сек
     }, 1000);
   },
-  stop() {
-    clearInterval(this.intevalId);
-    this.isActive = false;
+};
+//обьект настроек для flatpickr
+const options = {
+  enableTime: true, //Включает выбор времени
+  time_24hr: true, //Отображает средство выбора времени в 24-часовом режиме без выбора AM/PM, если включено.
+  defaultDate: new Date(), //Устанавливает начальную выбранную дату (указываем объект )
+  minuteIncrement: 1, //Регулирует шаг ввода минут (включая прокрутку)
+  onClose(selectedDates) {
+    //условие на то, что нужно выбрать дату в будущем
+    if (selectedDates[0] <= new Date()) {
+      Notiflix.Notify.failure('Please choose a date in the future');
+      btnStart.disabled = true;
+    } else {
+      timer.startDate = selectedDates[0]; // startDate присваем значение выбранной даты
+      btnStart.disabled = false;
+    }
   },
 };
+flatpickr('#datetime-picker', options);
 
 btnStart.addEventListener('click', () => {
   timer.start();
 });
 
-function updateClockTime({ days, hours, minutes, seconds }) {
-  daysTime.textContent = `${days}`;
-  hoursTime.textContent = `${hours}`;
-  minutesTime.textContent = `${minutes}`;
-  secondsTime.textContent = `${seconds}`;
+function setTextContent(domelem, value) {
+  domelem.textContent = addLeadingZero(value);
 }
-
-function pad(value) {
-  return String(value).padStart(2, '0');
+//функция в которой перебираем { days, hours, minutes, seconds } и функцией setTextContent присваем значение
+function updateClockTime(dateConvert) {
+  for (const dateConvertKey in dateConvert) {
+    setTextContent(
+      DOM_ELEMENTS_CONFIG[dateConvertKey],
+      dateConvert[dateConvertKey]
+    );
+  }
 }
 //принимает число и приводит к строке и добавлянт 0 если число меньше 2-х знаков
+function addLeadingZero(value) {
+  return String(value).padStart(2, '0');
+}
+//функция конвертации времени из милисекунд
 function convertMs(ms) {
   // Number of milliseconds per unit of time
   const second = 1000;
@@ -68,13 +101,13 @@ function convertMs(ms) {
   const day = hour * 24;
 
   // Remaining days
-  const days = pad(Math.floor(ms / day));
+  const days = Math.floor(ms / day);
   // Remaining hours
-  const hours = pad(Math.floor((ms % day) / hour));
+  const hours = Math.floor((ms % day) / hour);
   // Remaining minutes
-  const minutes = pad(Math.floor(((ms % day) % hour) / minute));
+  const minutes = Math.floor(((ms % day) % hour) / minute);
   // Remaining seconds
-  const seconds = pad(Math.floor((((ms % day) % hour) % minute) / second));
+  const seconds = Math.floor((((ms % day) % hour) % minute) / second);
 
   return { days, hours, minutes, seconds };
 }
