@@ -24,7 +24,7 @@ const DOM_ELEMENTS_CONFIG = {
 const timer = {
   startDate: null,
   timeDelta: null,
-  intevalId: null,
+  intervalId: null,
   isActive: false,
   start() {
     //создаем условие, чтобы не запускался повторно таймер при нажатии на старт
@@ -36,7 +36,7 @@ const timer = {
     const currentTime = Date.now(); //в переменную записываем текущее время
     this.timeDelta = this.startDate - currentTime; // в this.timeDelta записываем разницу между выбранной датой и текущей
 
-    this.intevalId = setInterval(() => {
+    this.intervalId = setInterval(() => {
       //создаем интервал
       if (this.timeDelta <= 0) {
         // условие на то, что если timeDelta меньше или равна 0,
@@ -47,10 +47,46 @@ const timer = {
         this.startDate = null;
         return;
       }
-      const time = convertMs(this.timeDelta); //конвертируем нашу timeDelta
-      updateClockTime(time); // обновляем
+      const time = this.convertMs(this.timeDelta); //конвертируем нашу timeDelta
+      this.updateClockTime(time); // обновляем
       this.timeDelta = this.timeDelta - 1000; //каждую секунду от timeDelta отнимаем 1 сек
     }, 1000);
+  },
+  //метод принимает число и приводит к строке и добавлянт 0 если число меньше 2-х знаков
+  addLeadingZero(value) {
+    return String(value).padStart(2, '0');
+  },
+  //метод добавляет в текст еще ноль в начале
+  setTextContent(domelem, value) {
+    domelem.textContent = this.addLeadingZero(value);
+  },
+  //метод в котором перебираем { days, hours, minutes, seconds } и функцией setTextContent присваем значение
+  updateClockTime(dateConvert) {
+    for (const dateConvertKey in dateConvert) {
+      this.setTextContent(
+        DOM_ELEMENTS_CONFIG[dateConvertKey],
+        dateConvert[dateConvertKey]
+      );
+    }
+  },
+  //метод конвертации времени из милисекунд
+  convertMs(ms) {
+    // Number of milliseconds per unit of time
+    const second = 1000;
+    const minute = second * 60;
+    const hour = minute * 60;
+    const day = hour * 24;
+
+    // Remaining days
+    const days = Math.floor(ms / day);
+    // Remaining hours
+    const hours = Math.floor((ms % day) / hour);
+    // Remaining minutes
+    const minutes = Math.floor(((ms % day) % hour) / minute);
+    // Remaining seconds
+    const seconds = Math.floor((((ms % day) % hour) % minute) / second);
+
+    return { days, hours, minutes, seconds };
   },
 };
 //обьект настроек для flatpickr
@@ -70,44 +106,9 @@ const options = {
     }
   },
 };
+
 flatpickr('#datetime-picker', options);
 
 btnStart.addEventListener('click', () => {
   timer.start();
 });
-
-function setTextContent(domelem, value) {
-  domelem.textContent = addLeadingZero(value);
-}
-//функция в которой перебираем { days, hours, minutes, seconds } и функцией setTextContent присваем значение
-function updateClockTime(dateConvert) {
-  for (const dateConvertKey in dateConvert) {
-    setTextContent(
-      DOM_ELEMENTS_CONFIG[dateConvertKey],
-      dateConvert[dateConvertKey]
-    );
-  }
-}
-//принимает число и приводит к строке и добавлянт 0 если число меньше 2-х знаков
-function addLeadingZero(value) {
-  return String(value).padStart(2, '0');
-}
-//функция конвертации времени из милисекунд
-function convertMs(ms) {
-  // Number of milliseconds per unit of time
-  const second = 1000;
-  const minute = second * 60;
-  const hour = minute * 60;
-  const day = hour * 24;
-
-  // Remaining days
-  const days = Math.floor(ms / day);
-  // Remaining hours
-  const hours = Math.floor((ms % day) / hour);
-  // Remaining minutes
-  const minutes = Math.floor(((ms % day) % hour) / minute);
-  // Remaining seconds
-  const seconds = Math.floor((((ms % day) % hour) % minute) / second);
-
-  return { days, hours, minutes, seconds };
-}

@@ -5,7 +5,7 @@ const inputDelay = form.querySelector('.delay');
 const inputAmount = form.querySelector('.amount');
 const inputStep = form.querySelector('.step');
 
-let delay = inputDelay.value;
+let delay = Number(inputDelay.value);
 
 form.addEventListener('submit', onSubmit);
 
@@ -16,7 +16,7 @@ function onSubmit(event) {
 
   const intervalId = setInterval(function () {
     count += 1;
-    if (count === inputAmount.value) {
+    if (count === Number(inputAmount.value)) {
       clearInterval(intervalId);
     }
 
@@ -33,7 +33,7 @@ function onSubmit(event) {
           `❌ Rejected promise ${position} in ${delay}ms`
         );
       });
-  }, (delay += inputStep.value));
+  }, (delay += Number(inputStep.value)));
 
   event.currentTarget.reset();
 }
@@ -50,3 +50,11 @@ function createPromise(position, delay) {
     }, delay);
   });
 }
+
+createPromise(2, 3000)
+  .then(({ position, delay }) => {
+    console.log(`✅ Fulfilled promise ${position} in ${delay}ms`);
+  })
+  .catch(({ position, delay }) => {
+    console.log(`❌ Rejected promise ${position} in ${delay}ms`);
+  });
