@@ -21,11 +21,11 @@ const DOM_ELEMENTS_CONFIG = {
   seconds: secondsTime,
 };
 //Создаем обьект с нашим таймером
-const timer = {
-  startDate: null,
-  timeDelta: null,
-  intervalId: null,
-  isActive: false,
+class Timer {
+  startDate = null;
+  timeDelta = null;
+  intervalId = null;
+  isActive = false;
   start() {
     //создаем условие, чтобы не запускался повторно таймер при нажатии на старт
     if (this.isActive || !this.startDate) {
@@ -51,15 +51,15 @@ const timer = {
       this.updateClockTime(time); // обновляем
       this.timeDelta = this.timeDelta - 1000; //каждую секунду от timeDelta отнимаем 1 сек
     }, 1000);
-  },
+  }
   //метод принимает число и приводит к строке и добавлянт 0 если число меньше 2-х знаков
   addLeadingZero(value) {
     return String(value).padStart(2, '0');
-  },
+  }
   //метод добавляет в текст еще ноль в начале
   setTextContent(domelem, value) {
     domelem.textContent = this.addLeadingZero(value);
-  },
+  }
   //метод в котором перебираем { days, hours, minutes, seconds } и функцией setTextContent присваем значение
   updateClockTime(dateConvert) {
     for (const dateConvertKey in dateConvert) {
@@ -68,7 +68,7 @@ const timer = {
         dateConvert[dateConvertKey]
       );
     }
-  },
+  }
   //метод конвертации времени из милисекунд
   convertMs(ms) {
     // Number of milliseconds per unit of time
@@ -87,8 +87,10 @@ const timer = {
     const seconds = Math.floor((((ms % day) % hour) % minute) / second);
 
     return { days, hours, minutes, seconds };
-  },
-};
+  }
+}
+//создаем обьект
+const timer1 = new Timer();
 //обьект настроек для flatpickr
 const options = {
   enableTime: true, //Включает выбор времени
@@ -101,7 +103,7 @@ const options = {
       Notiflix.Notify.failure('Please choose a date in the future');
       btnStart.disabled = true;
     } else {
-      timer.startDate = selectedDates[0]; // startDate присваем значение выбранной даты
+      timer1.startDate = selectedDates[0]; // startDate присваем значение выбранной даты
       btnStart.disabled = false;
     }
   },
@@ -110,5 +112,5 @@ const options = {
 flatpickr('#datetime-picker', options);
 
 btnStart.addEventListener('click', () => {
-  timer.start();
+  timer1.start();
 });
